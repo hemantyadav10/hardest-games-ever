@@ -62,10 +62,12 @@ export function Rules() {
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
-    const rulesShown = JSON.parse(localStorage.getItem('rulesShown') || 'false');
-    if (!rulesShown) {
-      setOpen(true);
-      localStorage.setItem('rulesShown', JSON.stringify(true));
+    if (typeof window !== 'undefined') {
+      const rulesShown = JSON.parse(localStorage.getItem('rulesShown') || 'false');
+      if (!rulesShown) {
+        setOpen(true);
+        localStorage.setItem('rulesShown', JSON.stringify(true));
+      }
     }
   }, [])
 
