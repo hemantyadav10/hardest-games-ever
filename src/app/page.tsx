@@ -15,14 +15,28 @@ import {
 
 import Hint from "@/components/hint";
 import { Info } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+type DifficultyLevel = 'easy' | 'hard' | 'nightmare'
+const difficultyOptions: DifficultyLevel[] = ['easy', 'hard', 'nightmare']
+
+const SECRET_NUM_LENGTH_CONFIG: Record<DifficultyLevel, number> = {
+  easy: 4,
+  hard: 5,
+  nightmare: 5
+};
 
 
-
-
-// Generate a 4-digit number with unique digits
-const generate4DigitNumber = () => {
+// Generate a number with unique digits
+const generateSecretCode = (numLength: number) => {
   const digits = new Set<number>();
-  while (digits.size < 4) {
+  while (digits.size < numLength) {
     digits.add(Math.floor(Math.random() * 10));
   }
   return Array.from(digits).join('');
@@ -30,39 +44,43 @@ const generate4DigitNumber = () => {
 
 type THistory = {
   guess: string;
-  cows: number;
-  bulls: number
+  cows?: number;
+  bulls?: number;
 }
 
+
 export default function CowsAndBullsGame() {
-  const [generatedNumber, setGeneratedNumber] = useState("");
+  const [secretCode, setSecretCode] = useState("");
   const [history, setHistory] = useState<THistory[]>([]);
   const [currentGuess, setCurrentGuess] = useState("")
   const [isGameOver, setIsGameOver] = useState(false)
-  const maxAttempts = 7;
   const [hasGivenUp, setHasGivenUp] = useState(false)
   const [showConfetti, setShowConfetti] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null)
   const [hasSeenHint, setHasSeenHint] = useState(false)
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
+  const [difficultyLevel, setDifficultyLevel] = useState<DifficultyLevel>('easy')
+  const SECRET_NUM_LENGTH: number = SECRET_NUM_LENGTH_CONFIG[difficultyLevel];
+  const maxAttempts = difficultyLevel === 'easy' ? 7 : 8;
+
 
   useEffect(() => {
     setWindowSize({ width: window.innerWidth, height: window.innerHeight });
   }, []);
 
+
   // Generate number on first load
   useEffect(() => {
-    const number = generate4DigitNumber();
-    setGeneratedNumber(number);
-    setHasGivenUp(false)
-  }, []);
+    const number = generateSecretCode(SECRET_NUM_LENGTH);
+    setSecretCode(number);
+  }, [difficultyLevel, SECRET_NUM_LENGTH]);
 
 
-
+  // Function to check the number of cows and bulls for each guess
   const checkCowsAndBulls = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const guess = new Set<string>(currentGuess)
-    if (guess.size < 4) {
+    if (guess.size < SECRET_NUM_LENGTH) {
       inputRef.current?.focus()
       toast({
         title: "All numbers should be unique."
@@ -73,39 +91,56 @@ export default function CowsAndBullsGame() {
     let bulls = 0;
     let cows = 0;
 
-    for (let i = 0; i < 4; i++) {
-      if (currentGuess[i] === generatedNumber[i]) {
+    for (let i = 0; i < SECRET_NUM_LENGTH; i++) {
+      if (currentGuess[i] === secretCode[i]) {
         bulls++;
-      } else if (generatedNumber.includes(currentGuess[i])) {
+      } else if (secretCode.includes(currentGuess[i])) {
         cows++;
       }
     }
 
-    const newAttempt = { guess: currentGuess, cows, bulls };
-    setHistory(prev => [...prev, newAttempt]);
+    if (difficultyLevel === 'easy' || difficultyLevel === 'hard') {
+      const newAttempt = { guess: currentGuess, cows, bulls };
+      setHistory(prev => [...prev, newAttempt]);
+    } else if (difficultyLevel === 'nightmare') {
+      const clearedHistory = history.map(attempt => ({
+        ...attempt,
+        cows: undefined,
+        bulls: undefined
+      }));
+
+      // Add the new guess with bulls and cows
+      const newAttempt = { guess: currentGuess, cows, bulls };
+
+      // Update history
+      setHistory([...clearedHistory, newAttempt]);
+    }
+
     setCurrentGuess("");  // Reset input for the next attempt
 
-    if (bulls === 4 || history.length + 1 >= maxAttempts) {
+    if (bulls === SECRET_NUM_LENGTH || history.length + 1 >= maxAttempts) {
       setIsGameOver(true);
       setHasGivenUp(true)
     }
 
-    if (bulls === 4) {
+    if (bulls === SECRET_NUM_LENGTH) {
       triggerConfetti()
     }
   };
 
+
   // Handle OTP change, restrict to numbers only
   const handleOtpChange = (value: string) => {
-    if (/^\d*$/.test(value) && value.length <= 4) {
+    if (/^\d*$/.test(value) && value.length <= SECRET_NUM_LENGTH) {
       setCurrentGuess(value);
     }
   };
 
 
+  // Handle New Game, reset everything
   const handleStartNewGame = () => {
-    const number = generate4DigitNumber();
-    setGeneratedNumber(number);
+    const number = generateSecretCode(SECRET_NUM_LENGTH);
+    setSecretCode(number);
     setCurrentGuess('')
     setHistory([])
     setIsGameOver(false)
@@ -114,16 +149,21 @@ export default function CowsAndBullsGame() {
     inputRef.current?.focus()
   }
 
+
+  // On give up , show the secret number
   const handleGiveUp = () => {
     setHasGivenUp(true)
   }
 
+
+  // function to show confetti like when the game is won
   const triggerConfetti = () => {
     setShowConfetti(true);
     setTimeout(() => {
       setShowConfetti(false)
     }, 4000)
   };
+
 
   return (
     <div className="h-svh flex flex-col  items-center space-y-2">
@@ -150,19 +190,19 @@ export default function CowsAndBullsGame() {
 
       </div>
       <div className=" space-y-2 border p-4 rounded-md">
-        {/* <p>Generated number: {generatedNumber}</p> */}
+        {/* <p>Generated number: {secretCode}</p> */}
         <div className="flex items-center gap-4 justify-between">
           <div className="flex space-x-2">
             {
               hasGivenUp
                 ? (
-                  generatedNumber.split('').map((number, i) => (
+                  secretCode.split('').map((number, i) => (
                     <div key={i} className="w-8 h-8 flex items-center justify-center bg-[green]  shadow-sm rounded-md font-semibold text-lg text-destructive-foreground">
                       {number}
                     </div>
                   ))
                 ) : (
-                  Array.from({ length: 4 }).map((_, i) => (
+                  Array.from({ length: SECRET_NUM_LENGTH }).map((_, i) => (
                     <div key={i} className="w-8 h-8 flex items-center justify-center bg-secondary rounded-md font-semibold text-lg shadow-sm text-secondary-foreground">
                       ?
                     </div>
@@ -202,17 +242,17 @@ export default function CowsAndBullsGame() {
         ))}
 
         {!isGameOver && (
-          <form onSubmit={e => checkCowsAndBulls(e)} className="flex items-center gap-4">
+          <form hidden={isGameOver} onSubmit={e => checkCowsAndBulls(e)} className="flex items-center gap-4">
             <InputOTP
               ref={inputRef}
-              maxLength={4}
+              maxLength={SECRET_NUM_LENGTH}
               value={currentGuess}
               onChange={handleOtpChange}
               disabled={hasGivenUp}
-              aria-label="Enter your 4-digit guess"
+              aria-label="Enter your guess"
             >
               <InputOTPGroup className="space-x-[10px]">
-                {[0, 1, 2, 3].map((index) => (
+                {Array.from({ length: SECRET_NUM_LENGTH }).map((_, index) => (
                   <InputOTPSlot
                     key={index}
                     index={index}
@@ -223,7 +263,7 @@ export default function CowsAndBullsGame() {
 
             <Button
               type="submit"
-              disabled={currentGuess.length !== 4}
+              disabled={currentGuess.length !== SECRET_NUM_LENGTH}
               onClick={() => inputRef.current?.focus()}
             >
               Submit
@@ -236,15 +276,15 @@ export default function CowsAndBullsGame() {
       {isGameOver && (
         <>
           <div>
-            {history[history.length - 1]?.bulls === 4
+            {history[history.length - 1]?.bulls === SECRET_NUM_LENGTH
               ? <p className="text-[green]">Congratulations! You guessed it right!</p>
-              : <p className="text-red-500">Game Over! The number was {generatedNumber}.</p>
+              : <p className="text-red-500">Game Over! The number was {secretCode}.</p>
             }
           </div>
         </>
       )}
       <p className="text-sm">Attempts left: {maxAttempts - history?.length}</p>
-      <div className="space-x-2 flex" >
+      <div className="flex flex-wrap justify-center gap-2" >
         <Button
           onClick={handleStartNewGame}
         >
@@ -258,10 +298,27 @@ export default function CowsAndBullsGame() {
         </Button>
         {(history?.length > 1 && !hasSeenHint) && (
           <Hint
-            secretNumber={generatedNumber}
+            secretNumber={secretCode}
             toggleHintVisibility={() => setHasSeenHint(true)}
+            secretNumLength={SECRET_NUM_LENGTH}
           />
         )}
+        <Select
+          value={difficultyLevel}
+          onValueChange={(level: DifficultyLevel) => {
+            setDifficultyLevel(level)
+            handleStartNewGame()
+          }}
+        >
+          <SelectTrigger className="w-max min-w-28 capitalize">
+            <SelectValue placeholder="Difficulty" />
+          </SelectTrigger>
+          <SelectContent>
+            {difficultyOptions.map(option => (
+              <SelectItem key={option} value={option} className="capitalize">{option}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );

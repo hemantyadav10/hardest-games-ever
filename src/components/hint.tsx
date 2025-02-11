@@ -1,6 +1,5 @@
 "use client"
 
-import React, { useMemo } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -15,22 +14,29 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { Button } from './ui/button'
-import { Lightbulb } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Lightbulb } from 'lucide-react'
+import React, { useEffect } from 'react'
+import { Button } from './ui/button'
 
 
 type HintProps = {
   secretNumber: string;
-  toggleHintVisibility: () => void
+  toggleHintVisibility: () => void,
+  secretNumLength: number;
 }
 
-export default function Hint({ secretNumber, toggleHintVisibility }: HintProps) {
-  const indexToShow = useMemo(() => Math.floor(Math.random() * 4), [])
-  const hint: string[] = Array.from({ length: 4 }).map((_, idx) => {
+export default function Hint({ secretNumber, toggleHintVisibility, secretNumLength }: HintProps) {
+  const [indexToShow, setIndexToShow] = React.useState<number | null>(null);
+  const hint: string[] = Array.from({ length: secretNumLength }).map((_, idx) => {
     if (idx === indexToShow) return secretNumber[indexToShow]
     return "?"
   })
+
+  useEffect(() => {
+    setIndexToShow(Math.floor(Math.random() * secretNumLength));
+  }, []);
+
 
   return (
     <Dialog onOpenChange={(open) => {
