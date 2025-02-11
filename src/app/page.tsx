@@ -135,7 +135,7 @@ export default function CowsAndBullsGame() {
       </div>
       <div className="text-sm flex items-center gap-2">Guess the secret number withing {maxAttempts} attempts
         <Popover>
-          <PopoverTrigger>
+          <PopoverTrigger aria-label="Game Info">
             <Info size={16} />
           </PopoverTrigger>
           <PopoverContent side="top" className="text-xs space-y-2 w-max">
@@ -209,6 +209,7 @@ export default function CowsAndBullsGame() {
               value={currentGuess}
               onChange={handleOtpChange}
               disabled={hasGivenUp}
+              aria-label="Enter your 4-digit guess"
             >
               <InputOTPGroup className="space-x-[10px]">
                 {[0, 1, 2, 3].map((index) => (

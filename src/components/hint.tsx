@@ -44,6 +44,7 @@ export default function Hint({ secretNumber, toggleHintVisibility }: HintProps) 
                 variant={"outline"}
                 size={'icon'}
                 className="rounded-full"
+                aria-label='Show hint'
               >
                 <Lightbulb />
               </Button>

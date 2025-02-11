@@ -74,7 +74,7 @@ export function Rules() {
   return (
     <Drawer open={open} onOpenChange={(o) => setOpen(o)}>
       <DrawerTrigger asChild >
-        <Button variant="ghost" size="icon" className="rounded-full">
+        <Button aria-label="Open game rules" variant="ghost" size="icon" className="rounded-full">
           <CircleHelp />
         </Button>
       </DrawerTrigger>
