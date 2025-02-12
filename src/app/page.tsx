@@ -173,7 +173,7 @@ export default function CowsAndBullsGame() {
         <h1 className="text-3xl font-bold">Bulls and Cows</h1>
         <ModeToggle />
       </div>
-      <div className="text-sm flex items-center gap-2">Guess the secret number withing {maxAttempts} attempts
+      <div className="text-sm flex items-center gap-2">Guess the secret number within {maxAttempts} attempts
         <Popover>
           <PopoverTrigger aria-label="Game Info">
             <Info size={16} />
