@@ -13,6 +13,7 @@ import {
   DrawerTrigger
 } from "@/components/ui/drawer"
 import { useEffect, useState } from "react"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip"
 
 
 const examples = [
@@ -73,11 +74,20 @@ export function Rules() {
 
   return (
     <Drawer open={open} onOpenChange={(o) => setOpen(o)}>
-      <DrawerTrigger asChild >
-        <Button aria-label="Open game rules" variant="ghost" size="icon" className="rounded-full">
-          <CircleHelp />
-        </Button>
-      </DrawerTrigger>
+      <TooltipProvider delayDuration={0}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DrawerTrigger asChild>
+              <Button aria-label="Open game rules" variant="ghost" size="icon" className="rounded-full">
+                <CircleHelp />
+              </Button>
+            </DrawerTrigger>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>How to Play</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       <DrawerContent className="">
         <div className="mx-auto w-full relative">
           <DrawerClose asChild className="absolute right-4 top-0">

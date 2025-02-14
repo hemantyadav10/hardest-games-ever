@@ -7,11 +7,21 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { ChartNoAxesCombined } from "lucide-react"
-import { Button } from "./ui/button"
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger
+} from "@/components/ui/drawer"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { DifficultyLevel } from '@/app/page'
+import { useMediaQuery } from "@/hooks/use-media-query"
+import { ChartNoAxesCombined } from "lucide-react"
 import { useEffect, useState } from "react"
+import { Button } from "./ui/button"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip'
+import { DifficultyLevel, difficultyOptions } from "@/types"
 
 type GameStat = {
   label: string;
@@ -37,17 +47,15 @@ const gameStats: Record<DifficultyLevel, GameStat[]> = {
     { label: 'Win %', value: 0 },
     { label: 'Best Game', value: 0 },
   ]
-};
+} as const;
 
 type propType = {
-  difficultyOptions: DifficultyLevel[];
   currentAttempt: number;
   currentDifficulty: DifficultyLevel;
   isGameWon: boolean;
 }
 
-export default function Stts({
-  difficultyOptions,
+export default function Stats({
   currentAttempt,
   currentDifficulty,
   isGameWon,
@@ -59,18 +67,8 @@ export default function Stts({
     }
     return gameStats;
   });
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const localStats = JSON.parse(localStorage.getItem('stats') || 'null');
-      if (localStats) {
-        setStats(localStats)
-      }
-    }
-  }, [])
-
-  useEffect(() => {
-    updateStats(currentDifficulty, currentAttempt);
-  }, [currentAttempt, currentDifficulty]);
+  const [open, setOpen] = useState(false)
+  const isDesktop = useMediaQuery("(min-width: 640px)")
 
   const updateStats = (difficulty: DifficultyLevel, attempt: number) => {
     const currentStats = stats[difficulty];
@@ -91,7 +89,6 @@ export default function Stts({
       winPercentage = parseFloat(((gamesWon / gamesPlayed) * 100).toFixed(2))
     }
 
-
     const updatedStats: GameStat[] = [
       { label: 'Games Played', value: gamesPlayed },
       { label: 'Games Won', value: gamesWon },
@@ -104,53 +101,129 @@ export default function Stts({
     localStorage.setItem('stats', JSON.stringify(newStats));
   };
 
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button
-          size={'icon'}
-          className="rounded-full"
-          variant={'ghost'}
-        >
-          <ChartNoAxesCombined />
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Game Performance</DialogTitle>
-          <DialogDescription>
-            Stats
-          </DialogDescription>
-          <Tabs defaultValue={difficultyOptions[0]}>
-            <TabsList className="grid w-full grid-cols-3">
-              {difficultyOptions.map(level => (
-                <TabsTrigger value={level} className="capitalize"
-                  key={level}
-                >
-                  {level}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-            {difficultyOptions.map(level => (
-              <TabsContent value={level} key={level} className="pt-2">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  {stats[level]?.map((stat: GameStat, index: number) => (
-                    <div key={index} className="text-center space-y-2">
-                      <div className="bg-primary rounded-md p-1 text-center text-primary-foreground">
-                        {stat.label}
-                      </div>
-                      <p className="text-lg">
-                        {stat.value === 0 ? "-" : stat.label === 'Best Game' ? <>{stat.value}  <span className="text-sm ">{stat.value < 2 ? "attempt" : "attempts"}</span></> : stat.value}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </TabsContent>
-            ))}
-          </Tabs>
-        </DialogHeader>
-      </DialogContent>
-    </Dialog>
+  useEffect(() => {
+    updateStats(currentDifficulty, currentAttempt);
+  }, [currentAttempt, currentDifficulty]);
 
+
+  if (isDesktop) {
+    return (
+      <Dialog open={open} onOpenChange={setOpen}>
+        <TooltipProvider delayDuration={0}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <DialogTrigger asChild>
+                <Button
+                  size={'icon'}
+                  className="rounded-full"
+                  variant={'ghost'}
+                >
+                  <ChartNoAxesCombined />
+                </Button>
+              </DialogTrigger>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>View Game Stats</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Game Performance</DialogTitle>
+            <DialogDescription>
+              Stats
+            </DialogDescription>
+          </DialogHeader>
+          <StatsSection
+            difficultyOptions={difficultyOptions}
+            stats={stats}
+          />
+        </DialogContent>
+      </Dialog>
+    )
+  }
+
+  return (
+    <Drawer open={open} onOpenChange={setOpen}>
+      <TooltipProvider delayDuration={0}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DrawerTrigger asChild>
+              <Button
+                size={'icon'}
+                className="rounded-full"
+                variant={'ghost'}
+              >
+                <ChartNoAxesCombined />
+              </Button>
+            </DrawerTrigger>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>View Game Stats</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+      <DrawerContent>
+        <DrawerHeader className="text-left">
+          <DrawerTitle>Game Performance</DrawerTitle>
+          <DrawerDescription>
+            Stats
+          </DrawerDescription>
+        </DrawerHeader>
+        <div className='p-4 pt-0'>
+          <StatsSection
+            difficultyOptions={difficultyOptions}
+            stats={stats}
+          />
+        </div>
+      </DrawerContent>
+    </Drawer>
+  )
+}
+
+function StatsSection({ difficultyOptions, stats }: {
+  difficultyOptions: DifficultyLevel[],
+  stats: Record<DifficultyLevel, GameStat[]>
+}) {
+  return (
+    <Tabs defaultValue={difficultyOptions[0]}>
+      <TabsList className="grid w-full grid-cols-3 mt-2">
+        {difficultyOptions.map(level => (
+          <TabsTrigger value={level} className="capitalize"
+            key={level}
+          >
+            {level}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+      {difficultyOptions.map(level => (
+        <TabsContent value={level} key={level} className="pt-2">
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            {stats[level]?.map((stat: GameStat, index: number) => (
+              <div key={index} className="text-center space-y-2">
+                <div className="bg-primary rounded-md p-1 text-center text-primary-foreground">
+                  {stat.label}
+                </div>
+                <p className="text-lg">
+                  {stat.value === 0
+                    ? "-"
+                    : stat.label === 'Best Game'
+                      ? <>
+                        {stat.value}  <span className="text-sm ">
+                          {stat.value < 2
+                            ? "attempt"
+                            : "attempts"
+                          }
+                        </span>
+                      </>
+                      : stat.value
+                  }
+                </p>
+              </div>
+            ))}
+          </div>
+        </TabsContent>
+      ))}
+    </Tabs>
   )
 }

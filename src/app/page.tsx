@@ -8,24 +8,18 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp
 import { toast } from "@/hooks/use-toast";
 import { useEffect, useRef, useState } from "react";
 import Confetti from 'react-confetti';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
 
+import BullsCowsInfo from "@/components/bullsCowsInfo";
 import Hint from "@/components/hint";
-import { Info } from "lucide-react";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
+import { DifficultyLevel, difficultyOptions } from "@/types";
 
-export type DifficultyLevel = 'easy' | 'hard' | 'nightmare'
-export const difficultyOptions: DifficultyLevel[] = ['easy', 'hard', 'nightmare']
 
 const SECRET_NUM_LENGTH_CONFIG: Record<DifficultyLevel, number> = {
   easy: 4,
@@ -80,7 +74,7 @@ export default function CowsAndBullsGame() {
   // Function to check the number of cows and bulls for each guess
   const checkCowsAndBulls = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const guess = new Set<string>(currentGuess)
+    const guess = new Set(currentGuess)
     if (guess.size < SECRET_NUM_LENGTH) {
       inputRef.current?.focus()
       toast({
@@ -154,7 +148,6 @@ export default function CowsAndBullsGame() {
   // On give up , show the secret number
   const handleGiveUp = () => {
     setHasGivenUp(true)
-    setIsGameOver(true)
   }
 
 
@@ -163,20 +156,38 @@ export default function CowsAndBullsGame() {
     setShowConfetti(true);
     setTimeout(() => {
       setShowConfetti(false)
-    }, 8000)
+    }, 5000)
   };
 
 
   return (
     <>
       {showConfetti && <Confetti width={windowSize.width} height={windowSize.height - 1} />}
-      <div className="h-svh flex flex-col  items-center space-y-2">
-        <div className="text-center w-full p-2 flex items-center  justify-between border-b border-border mb-2">
-          <Rules />
-          <h1 className="text-3xl font-bold">Bulls and Cows</h1>
-          <div>
+      <div className="h-svh flex flex-col items-center space-y-2">
+        <div className=" w-full p-2 border-b items-center border-border mb-2 grid-cols-[1fr_auto_1fr] grid">
+          <div className="text-left">
+            <Rules />
+            {history?.length > 1 && (
+              difficultyLevel === 'easy' ? (
+                <Hint
+                  secretNumber={secretCode}
+                  toggleHintVisibility={() => setHasSeenHint(true)}
+                  secretNumLength={SECRET_NUM_LENGTH}
+                />
+              ) : (
+                !hasSeenHint && (
+                  <Hint
+                    secretNumber={secretCode}
+                    toggleHintVisibility={() => setHasSeenHint(true)}
+                    secretNumLength={SECRET_NUM_LENGTH}
+                  />
+                )
+              )
+            )}  
+          </div>
+          <h1 className="sm:text-3xl text-xl text-center font-bold">Bulls and Cows</h1>
+          <div className="text-right">
             <Stats
-              difficultyOptions={difficultyOptions}
               currentAttempt={history.length}
               currentDifficulty={difficultyLevel}
               isGameWon={history[history.length - 1]?.bulls === SECRET_NUM_LENGTH}
@@ -185,19 +196,7 @@ export default function CowsAndBullsGame() {
           </div>
         </div>
         <div className="text-sm flex items-center gap-2">Guess the secret number within {maxAttempts} attempts
-          <Popover>
-            <PopoverTrigger aria-label="Game Info">
-              <Info size={16} />
-            </PopoverTrigger>
-            <PopoverContent side="top" className="text-xs space-y-2 w-max">
-              <div>
-                <div className="size-6 border-2 rounded-full border-orange-300 items-center justify-center inline-flex">🐂</div> <strong>Bulls</strong> - Correct digit in right position
-              </div>
-              <div>
-                <div className="size-6 border-2 rounded-full border-input items-center justify-center inline-flex">🐄</div> <strong>Cows</strong> - Correct digit in wrong position
-              </div>
-            </PopoverContent>
-          </Popover>
+          <BullsCowsInfo />
 
         </div>
         <div className=" space-y-2 border p-4 rounded-md">
@@ -214,7 +213,7 @@ export default function CowsAndBullsGame() {
                     ))
                   ) : (
                     Array.from({ length: SECRET_NUM_LENGTH }).map((_, i) => (
-                      <div key={i} className="w-8 h-8 flex items-center justify-center bg-secondary rounded-md font-semibold text-lg shadow-sm text-secondary-foreground">
+                      <div key={i} className="w-8 h-8 flex items-center justify-center bg-foreground rounded-md font-semibold text-lg shadow-sm text-secondary">
                         ?
                       </div>
                     ))
@@ -261,6 +260,7 @@ export default function CowsAndBullsGame() {
                 onChange={handleOtpChange}
                 disabled={hasGivenUp}
                 aria-label="Enter your guess"
+                autoFocus
               >
                 <InputOTPGroup className="space-x-[10px]">
                   {Array.from({ length: SECRET_NUM_LENGTH }).map((_, index) => (
@@ -286,7 +286,7 @@ export default function CowsAndBullsGame() {
 
         {isGameOver && (
           <>
-            <div>
+            <div className="text-sm">
               {history[history.length - 1]?.bulls === SECRET_NUM_LENGTH
                 ? <p className="text-[green]">Congratulations! You guessed it right!</p>
                 : <p className="text-red-500">Game Over! The number was {secretCode}.</p>
@@ -307,13 +307,6 @@ export default function CowsAndBullsGame() {
           >
             Give up
           </Button>
-          {(history?.length > 1 && !hasSeenHint) && (
-            <Hint
-              secretNumber={secretCode}
-              toggleHintVisibility={() => setHasSeenHint(true)}
-              secretNumLength={SECRET_NUM_LENGTH}
-            />
-          )}
           <Select
             value={difficultyLevel}
             onValueChange={(level: DifficultyLevel) => {
