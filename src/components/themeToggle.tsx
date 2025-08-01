@@ -1,6 +1,6 @@
 "use client"
 
-import { MonitorCog, Moon, Sun } from "lucide-react"
+import { MonitorCog, Moon, Sun, Check } from "lucide-react"
 import { useTheme } from "next-themes"
 import * as React from "react"
 
@@ -21,9 +21,10 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 import { useMediaQuery } from "@/hooks/use-media-query"
+import { cn } from "@/lib/utils"
 
 export function ModeToggle() {
-  const { setTheme } = useTheme()
+  const { theme, setTheme } = useTheme()
   const isDesktop = useMediaQuery("(min-width: 640px)")
   const [open, setOpen] = React.useState(false)
 
@@ -37,15 +38,30 @@ export function ModeToggle() {
             <span className="sr-only">Toggle theme</span>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem className="cursor-pointer" onClick={() => setTheme("light")}>
-            <Sun />  Light
+        <DropdownMenuContent align="end" className="w-40">
+          <DropdownMenuItem
+            className={cn(
+              "cursor-pointer",
+            )}
+            onClick={() => setTheme("light")}
+          >
+            <Sun />  Light {theme === 'light' && <Check className="ml-auto" />}
           </DropdownMenuItem>
-          <DropdownMenuItem className="cursor-pointer" onClick={() => setTheme("dark")}>
-            <Moon /> Dark
+          <DropdownMenuItem
+            className={cn(
+              "cursor-pointer",
+            )}
+            onClick={() => setTheme("dark")}
+          >
+            <Moon /> Dark {theme === 'dark' && <Check className="ml-auto" />}
           </DropdownMenuItem>
-          <DropdownMenuItem className="cursor-pointer" onClick={() => setTheme("system")}>
-            <MonitorCog /> System
+          <DropdownMenuItem
+            className={cn(
+              "cursor-pointer",
+            )}
+            onClick={() => setTheme("system")}
+          >
+            <MonitorCog /> System {theme === 'system' && <Check className="ml-auto" />}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -66,33 +82,33 @@ export function ModeToggle() {
           <DrawerTitle className="px-2" hidden>Theme</DrawerTitle>
         </DrawerHeader>
         <div className="p-4 flex-col flex">
-          <DrawerClose asChild>
-            <Button
-              variant={'ghost'}
-              onClick={() => setTheme("light")}
-              className="flex justify-start py-5"
-            >
-              <Sun />  Light
-            </Button>
-          </DrawerClose>
-          <DrawerClose asChild>
-            <Button
-              variant={'ghost'}
-              onClick={() => setTheme("dark")}
-              className="flex justify-start py-5"
-            >
-              <Moon /> Dark
-            </Button>
-          </DrawerClose>
-          <DrawerClose asChild>
-            <Button
-              variant={'ghost'}
-              onClick={() => setTheme("system")}
-              className="flex justify-start py-5"
-            >
-              <MonitorCog /> System
-            </Button>
-          </DrawerClose>
+          <Button
+            variant={'ghost'}
+            onClick={() => setTheme("light")}
+            className={cn(
+              "cursor-pointer flex justify-start py-5",
+            )}
+          >
+            <Sun />  Light {theme === 'light' && <Check className="ml-auto" />}
+          </Button>
+          <Button
+            variant={'ghost'}
+            onClick={() => setTheme("dark")}
+            className={cn(
+              "cursor-pointer flex justify-start py-5",
+            )}
+          >
+            <Moon /> Dark {theme === 'dark' && <Check className="ml-auto" />}
+          </Button>
+          <Button
+            variant={'ghost'}
+            onClick={() => setTheme("system")}
+            className={cn(
+              "cursor-pointer flex justify-start py-5",
+            )}
+          >
+            <MonitorCog /> System {theme === 'system' && <Check className="ml-auto" />}
+          </Button>
         </div>
       </DrawerContent>
     </Drawer>
