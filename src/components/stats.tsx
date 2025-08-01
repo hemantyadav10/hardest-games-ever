@@ -103,7 +103,7 @@ export default function Stats({
 
   useEffect(() => {
     updateStats(currentDifficulty, currentAttempt);
-  }, [currentAttempt, currentDifficulty, updateStats]);
+  }, [currentAttempt, currentDifficulty]);
 
 
   if (isDesktop) {
